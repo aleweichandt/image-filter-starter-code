@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
@@ -30,10 +30,25 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   /**************************************************************************** */
 
   //! END @TODO1
+  app.get('/filteredimage', async (req: Request, res: Response) => {
+    const { image_url: imageUrl } = req.query;
+    if(!imageUrl) {
+      res.status(400).send("missing image url");
+    }
+    try {
+      const localFilePath = await filterImageFromURL(imageUrl);
+      await res.status(200).sendFile(localFilePath);
+      res.on('finish', () => { 
+        deleteLocalFiles([localFilePath])
+      });
+    } catch(error) {
+      res.status(422).send(error.message);
+    }
+  })
   
   // Root Endpoint
   // Displays a simple message to the user
-  app.get( "/", async ( req, res ) => {
+  app.get( "/", async ( req: Request, res: Response ) => {
     res.send("try GET /filteredimage?image_url={{}}")
   } );
   
